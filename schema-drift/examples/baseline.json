@@ -1,0 +1,6 @@
+{
+  "customer_id": "integer",
+  "name": "string",
+  "email": "string",
+  "account_status": "string"
+}

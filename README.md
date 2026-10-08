@@ -1,128 +1,93 @@
 # Fraoula Data Trust Toolkit
 
-**Open-source tools for data quality, schema validation, and data contract enforcement.**
+Open-source tools for **data quality, schema validation, and data contract enforcement**.
 
-Built by [Fraoula](https://www.fraoula.co), a data trust software company for regulated enterprises.
+Built by [Fraoula](https://www.fraoula.co) — data trust software for regulated enterprises.
 
----
+[![CI](https://github.com/fraoula/data-trust-toolkit/actions/workflows/test.yml/badge.svg)](https://github.com/fraoula/data-trust-toolkit/actions/workflows/test.yml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-## What it checks
+## Included Tool: Schema Drift Guard
 
-- **Schema violations** — Field presence, unexpected columns, and data type alignment.
-- **Missing required fields** — Enforce non-nullable constraints per contract.
-- **Type mismatches** — Detect string, integer, float, boolean, and datetime mismatches.
-- **Unexpected columns** — Flag unannounced upstream schema drift.
-- **Duplicate records** — Key-based and full-row duplicate detection.
-- **Null-value thresholds** — Configurable null-tolerance percentages per column.
-- **Basic data-contract compliance** — Validate JSON or CSV datasets against declarative schema contracts.
+**Fraoula Schema Drift Guard** detects breaking schema changes before bad data reaches production.
+
+It compares an approved baseline schema with an incoming schema and classifies changes as:
+
+- **BREAKING** — removed fields or incompatible type changes
+- **WARNING** — newly introduced sensitive fields
+- **SAFE** — non-sensitive additive fields
+
+### Quick start
+
+```bash
+python schema-drift/drift_guard.py \
+  schema-drift/examples/baseline.json \
+  schema-drift/examples/incoming.json
+```
+
+## GitHub Action
+
+```yaml
+name: Schema Drift Check
+on:
+  pull_request:
+jobs:
+  schema-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check schema drift
+        uses: fraoula/data-trust-toolkit/schema-drift@main
+        with:
+          baseline: schema/baseline.json
+          incoming: schema/current.json
+```
+
+A breaking schema change exits with status code `1`, so the workflow fails and can block a pull request.
 
 ## Why this exists
 
-Bad data should be detected before it propagates into analytics, AI systems, financial workflows, or other mission-critical applications. In modern data stacks, silent schema drift and unvalidated pipeline ingestion degrade downstream machine learning models and create costly compliance violations.
+Bad data should be detected **before** it propagates into analytics, AI systems, financial workflows, healthcare systems, or other mission-critical applications.
 
-The **Fraoula Data Trust Toolkit** provides a lightweight, zero-dependency Python utility for data teams to validate datasets locally, in CI/CD pipelines, or before loading into production lakehouses and warehouses.
+Fraoula created this toolkit as a small open-source contribution to the data engineering community.
 
-## Installation
+## Repository structure
 
-```bash
-pip install .
-```
-
-Or install in development mode:
-
-```bash
-git clone https://github.com/fraoula/data-trust-toolkit.git
-cd data-trust-toolkit
-pip install -e .
-```
-
-## Quick Start
-
-### 1. Python API
-
-```python
-from fraoula_data_trust import validate_dataset
-
-# Validate CSV against expected schema contract
-report = validate_dataset(
-    data_path="examples/customers.csv",
-    schema_path="examples/expected_schema.json"
-)
-
-# Print clean terminal summary
-report.print_summary()
-
-# Export machine-readable JSON
-report.to_json("output_report.json")
-```
-
-### 2. CLI Usage
-
-```bash
-python -m fraoula_data_trust.validator --data examples/customers.csv --schema examples/expected_schema.json
-```
-
-## Data Contract Format
-
-Declarative schema contracts are defined in standard JSON:
-
-```json
-{
-  "name": "customer_ingestion_contract",
-  "version": "1.0.0",
-  "allow_unexpected_columns": false,
-  "columns": {
-    "customer_id": {
-      "type": "string",
-      "required": true,
-      "unique": true
-    },
-    "email": {
-      "type": "string",
-      "required": true,
-      "null_threshold_pct": 0.0
-    },
-    "account_balance": {
-      "type": "float",
-      "required": false
-    },
-    "is_active": {
-      "type": "boolean",
-      "required": true
-    }
-  }
-}
-```
-
-## Project Structure
-
-```
+```text
 data-trust-toolkit/
-├── fraoula_data_trust/
-│   ├── __init__.py         # Package entry point
-│   ├── validator.py        # Core DatasetValidator engine & CLI
-│   ├── schema.py           # Schema inference & contract evaluation
-│   ├── duplicates.py       # Duplicate detection logic
-│   └── report.py           # Terminal formatting & JSON reporting
-├── examples/               # Synthetic datasets and contracts
-├── tests/                  # Unit tests for validation rules
-└── docs/                   # Data contract guides
+├── .github/
+│   ├── workflows/test.yml
+│   └── ISSUE_TEMPLATE/
+├── schema-drift/
+│   ├── action.yml
+│   ├── drift_guard.py
+│   ├── README.md
+│   ├── examples/
+│   └── tests/
+├── CONTRIBUTING.md
+├── SECURITY.md
+├── LICENSE
+└── README.md
 ```
 
-## Running Tests
+## Roadmap
 
-```bash
-python -m unittest discover tests
-```
+Possible future additions:
 
----
+- JSON Schema support
+- Configurable field criticality
+- Configurable sensitive-field dictionaries
+- JSON machine-readable reports
+- Data contract validation
+- Pull-request comments
+- Schema version history
 
-## Fraoula Data Auditor
+## Fraoula
 
-For enterprise-scale, real-time data validation, observability, compliance controls, and managed deployments, see [Fraoula Data Auditor](https://www.fraoula.co/).
+Fraoula builds data trust software for regulated enterprises.
 
-Website: [https://www.fraoula.co](https://www.fraoula.co)
+Website: https://www.fraoula.co
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE) for details.
+Apache License 2.0.

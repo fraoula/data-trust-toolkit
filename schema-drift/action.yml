@@ -1,0 +1,22 @@
+name: "Fraoula Schema Drift Guard"
+description: "Detect breaking schema changes before bad data reaches production."
+author: "Fraoula"
+branding:
+  icon: "shield"
+  color: "purple"
+inputs:
+  baseline:
+    description: "Path to the approved baseline schema JSON file"
+    required: true
+  incoming:
+    description: "Path to the incoming schema JSON file"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Run Fraoula Schema Drift Guard
+      shell: bash
+      run: |
+        python3 "${{ github.action_path }}/drift_guard.py" \
+          "${{ inputs.baseline }}" \
+          "${{ inputs.incoming }}"
